@@ -65,6 +65,11 @@ class AudioPlayerService : Service(), MediaPlayer.OnCompletionListener,
     private var audioManager : AudioManager? = null
 
     /**
+     * Music loop indicator variable
+     */
+    private var loopPlayback: Boolean = false
+
+    /**
      * Broadcast Receiver to prevent when user unplug the earphone/headphone
      * When earphone/headphone unattached, we created the pause notification, and paused the song
      */
@@ -256,10 +261,6 @@ class AudioPlayerService : Service(), MediaPlayer.OnCompletionListener,
         initPlayer()
     }
 
-    private fun loopMusic() {
-
-    }
-
     /**
      * This is where we gonna initialize our media player
      */
@@ -292,9 +293,18 @@ class AudioPlayerService : Service(), MediaPlayer.OnCompletionListener,
     }
 
     override fun onCompletion(p0: MediaPlayer?) {
-        stopMusic()
-        killNotification()
-        stopSelf()
+        /**
+         * Check for loopback status
+         */
+        if ( MusicPreferences(applicationContext).getMusicLoopStatus() ) {
+            stopMusic()
+            mediaPlayer?.reset()
+            initPlayer()
+        } else {
+            stopMusic()
+            killNotification()
+            stopSelf()
+        }
     }
 
     override fun onPrepared(p0: MediaPlayer?) {
@@ -321,6 +331,9 @@ class AudioPlayerService : Service(), MediaPlayer.OnCompletionListener,
     }
 
     override fun onInfo(p0: MediaPlayer?, p1: Int, p2: Int): Boolean {
+        when(p2) {
+            MediaPlayer.MEDIA_INFO_BUFFERING_START -> {  }
+        }
         return false
     }
 
@@ -379,8 +392,17 @@ class AudioPlayerService : Service(), MediaPlayer.OnCompletionListener,
             mediasession?.setCallback(object : MediaSession.Callback() {
                 override fun onPlay() {
                     super.onPlay()
-                    resumeMusic()
-                    createStickyNotification(PLAYING_PLAYBACK)
+                    if ( holdPosition > 0 ) {
+                        resumeMusic()
+                        createStickyNotification(PLAYING_PLAYBACK)
+                    } else {
+                        MusicPreferences(applicationContext).storeMusicIndex(musicIndex)
+                        stopMusic()
+                        mediaPlayer?.reset()
+                        initPlayer()
+                        updateMusicMetaData()
+                        createStickyNotification(PLAYING_PLAYBACK)
+                    }
                 }
 
                 override fun onPause() {
@@ -405,8 +427,8 @@ class AudioPlayerService : Service(), MediaPlayer.OnCompletionListener,
 
                 override fun onStop() {
                     super.onStop()
-                    killNotification()
-                    stopSelf()
+                    stopMusic()
+                    createKillableNotification(PAUSE_PLAYBACK)
                 }
             })
         } else {
@@ -446,7 +468,42 @@ class AudioPlayerService : Service(), MediaPlayer.OnCompletionListener,
                 .setContentInfo(currentMusic?.title)
                 .addAction(android.R.drawable.ic_media_previous, "previous", playbackAction(3))
                 .addAction(notificationIcon, "pause", playerToggleIntent)
-                .addAction(android.R.drawable.ic_media_ff, "stop", playbackAction(4))
+                .addAction(R.drawable.ic_stop_black_24dp, "stop", playbackAction(4))
+                .setOngoing(true)
+                .addAction(android.R.drawable.ic_media_next, "next", playbackAction(2))
+
+        (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?)?.notify(getNotificationID(), notificationBuilder.build())
+    }
+
+    private fun createKillableNotification(playbackStatus: String) {
+        var notificationIcon = android.R.drawable.ic_media_pause
+        var playerToggleIntent: PendingIntent? = null
+        when(playbackStatus) {
+            PLAYING_PLAYBACK -> {
+                notificationIcon = android.R.drawable.ic_media_pause
+                playerToggleIntent = playbackAction(1)
+            }
+            PAUSE_PLAYBACK -> {
+                notificationIcon = android.R.drawable.ic_media_play
+                playerToggleIntent = playbackAction(0)
+            }
+        }
+
+        val large_icon : Bitmap = BitmapFactory.decodeResource(resources, R.drawable.music)
+        val notificationBuilder : Notification.Builder = Notification.Builder(this)
+                .setShowWhen(false)
+                .setStyle(Notification.MediaStyle()
+                        .setMediaSession(mediasession?.sessionToken)
+                        .setShowActionsInCompactView(0, 1, 2))
+                .setColor(resources.getColor(R.color.colorPrimary))
+                .setLargeIcon(large_icon)
+                .setSmallIcon(android.R.drawable.stat_sys_headset)
+                .setContentText(currentMusic?.artist)
+                .setContentTitle(currentMusic?.album)
+                .setContentInfo(currentMusic?.title)
+                .addAction(android.R.drawable.ic_media_previous, "previous", playbackAction(3))
+                .addAction(notificationIcon, "pause", playerToggleIntent)
+                .addAction(R.drawable.ic_stop_black_24dp, "stop", playbackAction(4))
                 .addAction(android.R.drawable.ic_media_next, "next", playbackAction(2))
 
         (getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager?)?.notify(getNotificationID(), notificationBuilder.build())

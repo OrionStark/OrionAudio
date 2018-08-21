@@ -11,7 +11,7 @@ import com.orionoscode.orionaudio.models.Music
 
 class MusicViewModel : ViewModel() {
     private var musics : MutableLiveData<ArrayList<Music>>? = null
-    public fun getMusics(contentResolver: ContentResolver) : LiveData<ArrayList<Music>>? {
+    fun getMusics(contentResolver: ContentResolver) : LiveData<ArrayList<Music>>? {
         if ( musics == null ) { musics = MutableLiveData() }
         loadMusic(contentResolver)
         return musics
