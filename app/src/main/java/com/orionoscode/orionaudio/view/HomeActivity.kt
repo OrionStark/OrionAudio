@@ -17,7 +17,6 @@ class HomeActivity : AppCompatActivity() {
 
     private var audioPlayerService : AudioPlayerService? = null
     var serviceBound : Boolean = false
-    var musicList : ArrayList<Music> = ArrayList()
 
     private var serviceConn : ServiceConnection? = null
 

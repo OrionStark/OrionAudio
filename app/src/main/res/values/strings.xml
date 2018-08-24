@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">OrionAudio</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="music_image">Music Image</string>
+    <string name="artist_band_name_here">Artist/Band Name Here</string>
+    <string name="music_title_here">Music Title Here</string>
+    <string name="music_duration_here">05:00</string>
 </resources>

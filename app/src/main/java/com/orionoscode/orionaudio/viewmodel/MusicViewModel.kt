@@ -11,6 +11,7 @@ import com.orionoscode.orionaudio.models.Music
 
 class MusicViewModel : ViewModel() {
     private var musics : MutableLiveData<ArrayList<Music>>? = null
+
     fun getMusics(contentResolver: ContentResolver) : LiveData<ArrayList<Music>>? {
         if ( musics == null ) { musics = MutableLiveData() }
         loadMusic(contentResolver)
@@ -26,16 +27,17 @@ class MusicViewModel : ViewModel() {
         val cursor : Cursor = contResolver.query(uri, null, selection, null, sortOrder)
         if ( cursor.count > 0 ) {
             while (cursor.moveToNext()) {
-                list.add(
-                        Music (
-                                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA)),
-                                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
-                                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM)),
-                                cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)) )
+                list.add (
+                    Music (
+                        cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA)),
+                        cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)),
+                        cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ALBUM)),
+                        cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.ARTIST)) )
                 )
             }
         }
         cursor.close()
         musics?.value = list
     }
+
 }

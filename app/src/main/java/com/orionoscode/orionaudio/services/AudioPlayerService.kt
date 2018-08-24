@@ -65,11 +65,6 @@ class AudioPlayerService : Service(), MediaPlayer.OnCompletionListener,
     private var audioManager : AudioManager? = null
 
     /**
-     * Music loop indicator variable
-     */
-    private var loopPlayback: Boolean = false
-
-    /**
      * Broadcast Receiver to prevent when user unplug the earphone/headphone
      * When earphone/headphone unattached, we created the pause notification, and paused the song
      */
@@ -382,6 +377,7 @@ class AudioPlayerService : Service(), MediaPlayer.OnCompletionListener,
      * / Like volume keys, media button etc.
      * */
     private fun initMediaSession() {
+
         if ( mediaSessionManager == null ) {
             mediaSessionManager = getSystemService(Context.MEDIA_SESSION_SERVICE) as MediaSessionManager?
             mediasession = MediaSession(applicationContext, "OrionAudio")
@@ -434,6 +430,7 @@ class AudioPlayerService : Service(), MediaPlayer.OnCompletionListener,
         } else {
             return
         }
+
     }
 
     /**
@@ -545,7 +542,6 @@ class AudioPlayerService : Service(), MediaPlayer.OnCompletionListener,
         if ( playbackAction == null || playbackAction.action == null ) {
             return
         }
-
         when {
             playbackAction.action.equals(ACTION_PLAY_MUSIC, ignoreCase = true) -> transportControls?.play()
             playbackAction.action.equals(ACTION_PAUSE_MUSIC, ignoreCase = true) -> transportControls?.pause()
@@ -557,7 +553,7 @@ class AudioPlayerService : Service(), MediaPlayer.OnCompletionListener,
 
     private fun updateMusicMetaData() {
         val albumArt : Bitmap = BitmapFactory.decodeResource(resources, R.drawable.music)
-        mediasession?.setMetadata(
+        mediasession?.setMetadata (
             MediaMetadata.Builder().putBitmap(MediaMetadata.METADATA_KEY_ALBUM_ART, albumArt)
                 .putString(MediaMetadata.METADATA_KEY_ARTIST, currentMusic?.artist)
                 .putString(MediaMetadata.METADATA_KEY_ALBUM, currentMusic?.album)
